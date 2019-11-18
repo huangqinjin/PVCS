@@ -79,6 +79,14 @@ function global:pcli {
             }
         }
 
+        "login" {
+            $u = if ($args[0]) { $args[0] } else { Read-Host -Prompt "Username" }           
+            # https://stackoverflow.com/questions/28352141/convert-a-secure-string-to-plain-text
+            $p = Read-Host -AsSecureString -Prompt "Password"
+            $c = (New-Object PSCredential $u, $p).GetNetworkCredential()
+            pcli-run "Set -vPCLI_ID $($c.UserName):$($c.Password)"
+        }
+
         Default {
             # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
             pcli-run ((,$cmd + $args) -join " ")
