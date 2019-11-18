@@ -53,12 +53,12 @@ function global:pcli {
 
             # https://stackoverflow.com/questions/8925323/redirection-of-standard-and-error-output-appending-to-the-same-log-file
             $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-            $pinfo.FileName = "pcli.exe"
+            $pinfo.FileName = if ($args[0]) { "python" } else { "pcli.exe" }
             $pinfo.RedirectStandardInput = $true
             $pinfo.RedirectStandardOutput = $true
             $pinfo.RedirectStandardError = $false
             $pinfo.UseShellExecute = $false
-            $pinfo.Arguments = "Run -ns -s`"$PSScriptRoot/run.pcli`""
+            $pinfo.Arguments = if ($args[0]) { "`"$PSScriptRoot/run.py`"" } else { "Run -ns -s`"$PSScriptRoot/run.pcli`"" }
             $p = New-Object System.Diagnostics.Process
             $p.StartInfo = $pinfo
             
