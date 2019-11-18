@@ -92,6 +92,14 @@ function global:pcli {
             pcli-run "Set -vPCLI_PR `"$Env:PCLI_PR`""
         }
 
+        "cd" {
+            $p = [IO.Path]::Combine($Env:PCLI_PP, $args[0])
+            $p = [IO.Path]::GetFullPath($p)
+            $r = [IO.Path]::GetPathRoot($p)
+            $Env:PCLI_PP = $p.Substring($r.Length - 1).Replace('\', '/')
+            pcli-run "Set -vPCLI_PP `"$Env:PCLI_PP`""
+        }
+
         Default {
             # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
             pcli-run ((,$cmd + $args) -join " ")
