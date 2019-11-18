@@ -1,0 +1,5 @@
+While Test 1=1 {
+    Readline -vcmd
+    Run -ns $cmd
+    Echo "Error Code: $?"
+}
