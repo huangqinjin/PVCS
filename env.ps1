@@ -87,6 +87,11 @@ function global:pcli {
             pcli-run "Set -vPCLI_ID $($c.UserName):$($c.Password)"
         }
 
+        "use" {
+            $Env:PCLI_PR = $args[0]
+            pcli-run "Set -vPCLI_PR `"$Env:PCLI_PR`""
+        }
+
         Default {
             # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
             pcli-run ((,$cmd + $args) -join " ")
