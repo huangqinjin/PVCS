@@ -35,7 +35,7 @@ function global:pcli {
             }
 
             while ($global:PCLI) {
-                $cmd = Read-Host -Prompt "[$Env:PCLI_PR]$Env:PCLI_PP"
+                $cmd = Read-Host -Prompt $(pcli pwd)
                 $args = -split $cmd
                 switch ($args[0]) {
                     "" { continue }
@@ -88,16 +88,15 @@ function global:pcli {
         }
 
         "use" {
-            $Env:PCLI_PR = $args[0]
-            pcli-run "Set -vPCLI_PR `"$Env:PCLI_PR`""
+            pcli-run "Set -vPCLI_PR `"$($args[0])`""
         }
 
         "cd" {
-            $p = [IO.Path]::Combine($Env:PCLI_PP, $args[0])
+            $p = [IO.Path]::Combine("/", $(pcli-run "Echo `${PCLI_PP}"), $args[0])
             $p = [IO.Path]::GetFullPath($p)
             $r = [IO.Path]::GetPathRoot($p)
-            $Env:PCLI_PP = $p.Substring($r.Length - 1).Replace('\', '/')
-            pcli-run "Set -vPCLI_PP `"$Env:PCLI_PP`""
+            $p = $p.Substring($r.Length - 1).Replace('\', '/')
+            pcli-run "Set -vPCLI_PP `"$p`""
         }
 
         "pwd" {
