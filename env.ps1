@@ -100,6 +100,10 @@ function global:pcli {
             pcli-run "Set -vPCLI_PP `"$Env:PCLI_PP`""
         }
 
+        "pwd" {
+            pcli-run "Echo [`${PCLI_PR}]`${PCLI_PP}"
+        }
+
         Default {
             # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
             pcli-run ((,$cmd + $args) -join " ")
