@@ -104,8 +104,17 @@ function global:pcli {
         }
 
         Default {
-            # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
-            pcli-run ((,$cmd + $args) -join " ")
+            if ($cmd[0] -eq '!') {
+                $cmd = $cmd.Substring(1)
+                & $cmd $args
+            } elseif ($cmd -match "\.(exe|bat)$") {
+                & $cmd $args
+            } elseif ($cmd -in "cmd","git") {
+                & $cmd $args
+            } else {
+                # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
+                pcli-run ((,$cmd + $args) -join " ")
+            } 
         }
     }
 }
