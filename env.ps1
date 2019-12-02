@@ -46,7 +46,8 @@ function global:pcli {
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_assignment_operators#assigning-multiple-variables
     $cmd, $args = $args
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_arrays#the-array-sub-expression-operator
-    $args = @($args)   # make sure args is array
+    # https://stackoverflow.com/questions/711991/flatten-array-in-powershell
+    $args = @($args | % { $_ })   # flatten args
 
     switch ($cmd) {
         "" {
@@ -145,4 +146,4 @@ function global:pcli {
     }
 }
 
-pcli init
+pcli init $args
