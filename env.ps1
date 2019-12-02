@@ -11,10 +11,12 @@ function global:pcli-run($cmd) {
         $output += [String]::new($buf, 0, $count)
         $lines = $output -split [Environment]::NewLine
         $output = $lines[-1]
-        $action = 0  # 0: continue; 1: return;
+        $action = 0  # 0: continue; 1: return; 2: prompt
         if ($output -match "^Error Code: (-?\d+)>$") {
             $global:LastExitCode = $Matches[1]
             $action = 1
+        } elseif ($output.EndsWith(" (y/n) ")) {
+            $action = 2
         }
 
         if ($lines.Length -gt 1) {
@@ -27,6 +29,12 @@ function global:pcli-run($cmd) {
                     Write-Output "Error Code: $global:LastExitCode"
                 }
                 return 
+            }
+            
+            2 {
+                $cmd = Read-Host -Prompt $output
+                $global:PCLI.StandardInput.WriteLine($cmd)
+                $output = ""
             }
 
             Default {}
