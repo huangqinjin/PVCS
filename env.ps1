@@ -11,8 +11,8 @@ function global:pcli-run($cmd) {
     while ($true) {
         $line = $global:PCLI.StandardOutput.ReadLine()
         if ($line -match "^Error Code: (-?\d+)$") {
-            $ec = $Matches[1]
-            if ($ec -ne 0) {
+            $global:LastExitCode = $Matches[1]
+            if ($global:LastExitCode -ne 0) {
                 Write-Output $line
             }
             return
