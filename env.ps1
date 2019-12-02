@@ -1,23 +1,35 @@
 function global:pcli-run($cmd) {
     $global:PCLI.StandardInput.WriteLine($cmd)
 
-    # pcli Readline always output prompt '>' (ASCII 62)
-    $s = $global:PCLI.StandardOutput.Read()
-    if ($s -ne 62) {
-        Write-Output "pcli.exe error!"
-        return
-    }
-
+    $buf = [Char[]]::new(4096)
+    $output = ""
     while ($true) {
-        $line = $global:PCLI.StandardOutput.ReadLine()
-        if ($line -match "^Error Code: (-?\d+)$") {
+        $count = $global:PCLI.StandardOutput.Read($buf, 0, $buf.Length)
+        if ($count -eq 0) {
+            continue
+        }
+        $output += [String]::new($buf, 0, $count)
+        $lines = $output -split [Environment]::NewLine
+        $output = $lines[-1]
+        $action = 0  # 0: continue; 1: return;
+        if ($output -match "^Error Code: (-?\d+)>$") {
             $global:LastExitCode = $Matches[1]
-            if ($global:LastExitCode -ne 0) {
-                Write-Output $line
+            $action = 1
+        }
+
+        if ($lines.Length -gt 1) {
+            Write-Output $lines[0..($lines.Length - 2)]
+        }
+
+        switch ($action) {
+            1 {
+                if ($global:LastExitCode -ne 0) {
+                    Write-Output "Error Code: $global:LastExitCode"
+                }
+                return 
             }
-            return
-        } else {
-            Write-Output $line
+
+            Default {}
         }
     }
 }
@@ -63,6 +75,12 @@ function global:pcli {
             $p.StartInfo = $pinfo
             
             if ($p.Start()) {
+                # pcli Readline always output prompt '>' (ASCII 62)
+                $s = $p.StandardOutput.Read()
+                if ($s -ne 62) {
+                    Write-Output "pcli.exe error!"
+                    return
+                }
                 $global:PCLI = $p
                 pcli use "$Env:PCLI_PR"
                 pcli cd "$Env:PCLI_PP"
