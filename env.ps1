@@ -61,6 +61,7 @@ function global:pcli {
                 switch ($args[0]) {
                     "" { continue }
                     "break" { return }
+                    "return" { return }
                     Default {
                         # @args: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting
                         pcli @args
@@ -68,6 +69,10 @@ function global:pcli {
                 }
             }
         }
+
+        "break" {}
+        "return" {}
+        "continue" {}
 
         "init" {
             pcli exit
