@@ -139,8 +139,10 @@ function global:pcli {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
                 & $cmd $args
-            } elseif ($cmd -match '\.(exe|bat)$') {
+            } elseif ($cmd -match '\.(ps1|bat)$') {
                 & $cmd $args
+            } elseif ($cmd -match '\.(exe)$') {
+                Start-Process -FilePath $cmd -ArgumentList $args -Wait -NoNewWindow
             } elseif ($cmd -in 'cmd','git') {
                 & $cmd $args
             } else {
