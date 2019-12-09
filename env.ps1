@@ -2,7 +2,7 @@ function global:pcli-run($cmd) {
     $global:PCLI.StandardInput.WriteLine($cmd)
 
     $buf = [Char[]]::new(4096)
-    $output = ""
+    $output = ''
     while ($true) {
         $count = $global:PCLI.StandardOutput.Read($buf, 0, $buf.Length)
         if ($count -eq 0) {
@@ -12,10 +12,10 @@ function global:pcli-run($cmd) {
         $lines = $output -split [Environment]::NewLine
         $output = $lines[-1]
         $action = 0  # 0: continue; 1: return; 2: prompt
-        if ($output -match "^Error Code: (-?\d+)>$") {
+        if ($output -match '^Error Code: (-?\d+)>$') {
             $global:LastExitCode = $Matches[1]
             $action = 1
-        } elseif ($output.EndsWith(" (y/n) ")) {
+        } elseif ($output.EndsWith(' (y/n) ')) {
             $action = 2
         }
 
@@ -34,7 +34,7 @@ function global:pcli-run($cmd) {
             2 {
                 $cmd = Read-Host -Prompt $output
                 $global:PCLI.StandardInput.WriteLine($cmd)
-                $output = ""
+                $output = ''
             }
 
             Default {}
@@ -50,7 +50,7 @@ function global:pcli {
     $args = @($args | % { $_ })   # flatten args
 
     switch ($cmd) {
-        "" {
+        '' {
             if (!$global:PCLI) {
                 pcli init
             }
@@ -59,9 +59,9 @@ function global:pcli {
                 $cmd = Read-Host -Prompt $(pcli pwd)
                 $args = -split $cmd
                 switch ($args[0]) {
-                    "" { continue }
-                    "break" { return }
-                    "return" { return }
+                    '' { continue }
+                    'break' { return }
+                    'return' { return }
                     Default {
                         # @args: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting
                         pcli @args
@@ -70,16 +70,16 @@ function global:pcli {
             }
         }
 
-        "break" {}
-        "return" {}
-        "continue" {}
+        'break' {}
+        'return' {}
+        'continue' {}
 
-        "init" {
+        'init' {
             pcli exit
 
             # https://stackoverflow.com/questions/8925323/redirection-of-standard-and-error-output-appending-to-the-same-log-file
             $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-            $pinfo.FileName = if ($args[0]) { "python" } else { "pcli.exe" }
+            $pinfo.FileName = if ($args[0]) { 'python' } else { 'pcli.exe' }
             $pinfo.RedirectStandardInput = $true
             $pinfo.RedirectStandardOutput = $true
             $pinfo.RedirectStandardError = $false
@@ -92,7 +92,7 @@ function global:pcli {
                 # pcli Readline always output prompt '>' (ASCII 62)
                 $s = $p.StandardOutput.Read()
                 if ($s -ne 62) {
-                    Write-Output "pcli.exe error!"
+                    Write-Output 'pcli.exe error!'
                     return
                 }
                 $global:PCLI = $p
@@ -103,49 +103,49 @@ function global:pcli {
             }
         }
 
-        "exit" {
+        'exit' {
             if ($global:PCLI) {
-                $global:PCLI.StandardInput.WriteLine("exit")
+                $global:PCLI.StandardInput.WriteLine('Exit')
                 $global:PCLI.WaitForExit()
                 $global:PCLI = $null
             }
         }
 
-        "login" {
-            $u = if ($args[0]) { $args[0] } else { Read-Host -Prompt "Username" }           
+        'login' {
+            $u = if ($args[0]) { $args[0] } else { Read-Host -Prompt Username }
             # https://stackoverflow.com/questions/28352141/convert-a-secure-string-to-plain-text
-            $p = Read-Host -AsSecureString -Prompt "Password"
+            $p = Read-Host -AsSecureString -Prompt Password
             $c = (New-Object PSCredential $u, $p).GetNetworkCredential()
             pcli-run "Set -vPCLI_ID $($c.UserName):$($c.Password)"
         }
 
-        "use" {
+        'use' {
             pcli-run "Set -vPCLI_PR `"$($args[0])`""
         }
 
-        "cd" {
-            $p = [IO.Path]::Combine("/", $(pcli-run "Echo `${PCLI_PP}"), $args[0])
+        'cd' {
+            $p = [IO.Path]::Combine('/', $(pcli-run 'Echo ${PCLI_PP}'), $args[0])
             $p = [IO.Path]::GetFullPath($p)
             $r = [IO.Path]::GetPathRoot($p)
             $p = $p.Substring($r.Length - 1).Replace('\', '/')
             pcli-run "Set -vPCLI_PP `"$p`""
         }
 
-        "pwd" {
-            pcli-run "Echo [`${PCLI_PR}]`${PCLI_PP}"
+        'pwd' {
+            pcli-run 'Echo [${PCLI_PR}]${PCLI_PP}'
         }
 
         Default {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
                 & $cmd $args
-            } elseif ($cmd -match "\.(exe|bat)$") {
+            } elseif ($cmd -match '\.(exe|bat)$') {
                 & $cmd $args
-            } elseif ($cmd -in "cmd","git") {
+            } elseif ($cmd -in 'cmd','git') {
                 & $cmd $args
             } else {
                 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators
-                pcli-run ((,$cmd + $args) -join " ")
+                pcli-run ((,$cmd + $args) -join ' ')
             } 
         }
     }
