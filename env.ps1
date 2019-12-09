@@ -135,6 +135,10 @@ function global:pcli {
             pcli-run 'Echo [${PCLI_PR}]${PCLI_PP}'
         }
 
+        'ls' {
+            pcli-run ((,'List' + $args + '*') -join ' ')
+        }
+
         Default {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
