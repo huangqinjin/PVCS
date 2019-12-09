@@ -211,6 +211,69 @@ function global:pcli {
             }
         }
 
+        'addfiles' {
+            $cmd = 'AddFiles', '-t"Archive"', '-z', '-c'
+            $msgfile = $null
+            $msg = $null
+            $loc = $null
+            for ($i = 0; $i -lt $args.Length; ++$i) {
+                if ($args[$i][0] -ne '-') {
+                    continue
+                } elseif ($args[$i].StartsWith('-pw')) {
+                    $loc = $args[$i].Substring(3)
+                } elseif ($args[$i].StartsWith('-m')) {
+                    $msg = $args[$i].Substring(2)
+                } elseif ($args[$i] -in '-y','-n') {
+                    $cmd = ,$args[$i] + $cmd
+                } else {
+                    $cmd += $args[$i]
+                }
+                $args[$i] = ''
+            }
+
+            if (!$loc) {
+                $loc = $PWD
+            }
+
+            for ($i = 0; $i -lt $args.Length; ++$i) {
+                if ($args[$i]) {
+                    # https://github.com/PowerShell/PowerShell/issues/10278
+                    # Note that .NET does not have the knowledge of PowerShell $PWD.
+                    # The working directory of pcli.exe is where initialization runs,
+                    # which may differ from $PWD. So convert file paths to absolute first.
+                    $args[$i] = [IO.Path]::Combine($loc, $args[$i])
+                    $d = [IO.Path]::GetDirectoryName($args[$i])
+                    # Only filename supports globbing
+                    $f = [IO.Path]::GetFileName($args[$i])
+                    $d = [IO.Path]::GetFullPath($d)
+                    $args[$i] = [IO.Path]::Combine($d, $f)
+                    $args[$i] = '"' + $args[$i] +'"'
+                }
+            }
+
+            if (!$msg) {
+                $msgfile = New-TemporaryFile
+                # Start-Process -FilePath $msgfile -Verb Edit -Wait
+                $editors = Get-Command -Name notepad.exe,vim -CommandType Application -TotalCount 1 -ErrorAction Ignore
+                Start-Process -FilePath $editors[0] -ArgumentList $msgfile -Wait -NoNewWindow
+                $msg = Get-Content -Path $msgfile -Raw
+                if ($msg -and $msg.Trim()) {
+                    $msg = "@$msgfile"
+                } else {
+                    $msg = ''
+                }
+            }
+
+            $cmd += "-pw`"$loc`""
+            $cmd += "-m`"$msg`""
+
+            pcli-run (($cmd + $args) -join ' ')
+
+            if ($msgfile) {
+                Remove-Item -Path $msgfile
+            }
+        }
+
         Default {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
