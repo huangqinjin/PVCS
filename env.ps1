@@ -139,6 +139,31 @@ function global:pcli {
             pcli-run ((,'List' + $args + '*') -join ' ')
         }
 
+        'get' {
+            $cmd = 'Get', '-bp"${PCLI_PP}"', '-z', '-w', '-o'
+            $loc = $null
+            for ($i = 0; $i -lt $args.Length; ++$i) {
+                if ($args[$i][0] -ne '-') {
+                    continue
+                } elseif ($args[$i].StartsWith('-a')) {
+                    $loc = $args[$i].Substring(2)
+                } elseif ($args[$i] -in '-y','-n') {
+                    $cmd = ,$args[$i] + $cmd
+                } else {
+                    $cmd += $args[$i]
+                }
+                $args[$i] = ''
+            }
+
+            if (!$loc) {
+                $loc = $PWD
+            }
+
+            $cmd += "-a`"$loc`""
+
+            pcli-run (($cmd + $args) -join ' ')
+        }
+
         'put' {
             $cmd = 'Put', '-bp"${PCLI_PP}"', '-z', '-ym', '-k', '-o'
             $msgfile = $null
