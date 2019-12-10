@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import sys
 import traceback
 
@@ -7,11 +8,10 @@ import traceback
 try: input = raw_input
 except NameError: pass
 
-vars = {
-    "PCLI_PR": "",
-    "PCLI_PP": "",
-    "PCLI_ID": "",
-}
+vars = {}
+for v in ["PCLI_PR", "PCLI_PP", "PCLI_ID"]:
+    vars[v] = os.getenv(v)
+
 while True:
     sys.stdout.write('>')
     sys.stdout.flush()
