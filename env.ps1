@@ -111,16 +111,39 @@ function global:pcli {
         'continue' {}
 
         'init' {
+            if ('-g' -in $args) {
+                pcli-git-ensure-inside-work-tree
+
+                $pr = git config --get pcli.pr
+                if (!$pr) {
+                    Write-Host "git config pcli.pr <project_database>"
+                    exit
+                }
+
+                $pp = git config --local --get pcli.pp
+                if (!$pp) {
+                    Write-Host "git config pcli.pp <project_path>"
+                    exit
+                }
+
+                $id = git config --get pcli.id
+
+            } else {
+                $pr = $Env:PCLI_PR
+                $pp = $Env:PCLI_PP
+                $id = $Env:PCLI_ID
+            }
+
             pcli exit
 
             # https://stackoverflow.com/questions/8925323/redirection-of-standard-and-error-output-appending-to-the-same-log-file
             $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-            $pinfo.FileName = if ($args[0]) { 'python' } else { 'pcli.exe' }
+            $pinfo.FileName = if ('-d' -in $args) { 'python' } else { 'pcli.exe' }
             $pinfo.RedirectStandardInput = $true
             $pinfo.RedirectStandardOutput = $true
             $pinfo.RedirectStandardError = $false
             $pinfo.UseShellExecute = $false
-            $pinfo.Arguments = if ($args[0]) { "`"$PSScriptRoot/run.py`"" } else { "Run -ns -s`"$PSScriptRoot/run.pcli`"" }
+            $pinfo.Arguments = if ('-d' -in $args) { "`"$PSScriptRoot/run.py`"" } else { "Run -ns -s`"$PSScriptRoot/run.pcli`"" }
             $p = New-Object System.Diagnostics.Process
             $p.StartInfo = $pinfo
             
@@ -132,8 +155,9 @@ function global:pcli {
                     return
                 }
                 $global:PCLI = $p
-                pcli use "$Env:PCLI_PR"
-                pcli cd "$Env:PCLI_PP"
+                pcli use $pr
+                pcli cd $pp
+                pcli-run "Set -vPCLI_ID `"$id`""
             } else {
                 Write-Output "Start $($pinfo.FileName) fail!"
             }
