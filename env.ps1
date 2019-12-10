@@ -42,6 +42,42 @@ function global:pcli-run($cmd) {
     }
 }
 
+function global:pcli-git-ensure-inside-work-tree {
+    # https://stackoverflow.com/questions/2180270/check-if-current-directory-is-a-git-repository
+    if (!$(git rev-parse --is-inside-work-tree 2>$null)) {
+        Write-Host 'not a git repository'
+        exit
+    }
+}
+
+function global:pcli-git-ensure-work-tree-root {
+    pcli-git-ensure-inside-work-tree
+    # https://stackoverflow.com/questions/957928/is-there-a-way-to-get-the-git-root-directory-in-one-command
+    $root = Resolve-Path $(git rev-parse --show-toplevel)
+    if ($root.Path -ne $PWD.Path) {
+        Write-Host 'pwd not work tree root'
+        exit
+    }
+}
+
+function global:pcli-git-ensure-work-tree-clean {
+    pcli-git-ensure-inside-work-tree
+    # https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script
+    if (git status --untracked-files=no --porcelain) {
+        Write-Host 'working directory not clean'
+        exit
+    }
+}
+
+function global:pcli-git-ensure-master-branch-clean {
+    pcli-git-ensure-work-tree-clean
+    # https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
+    if ($(git branch --show-current) -ne 'master') {
+        Write-Host 'current branch not master'
+        exit
+    }
+}
+
 function global:pcli {
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_assignment_operators#assigning-multiple-variables
     $cmd, $args = $args
