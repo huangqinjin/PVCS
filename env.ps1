@@ -334,6 +334,23 @@ function global:pcli {
             }
         }
 
+        "push" {
+            pcli-git-ensure-master-branch-clean
+
+            if ($files = git diff --diff-filter=M --name-only """$($args[0])""..." 2>$null) {
+                pcli put -l $files
+            }
+
+            # if ($files = git diff --diff-filter=A --name-only """$($args[0])""..." 2>$null) {
+            #     pcli addfiles -l -ph $files
+            # }
+
+            # if ($files = git diff --diff-filter=D --name-only """$($args[0])""..." 2>$null) {
+            #     pcli-run "Delete $files"
+            # }
+        }
+
+        
         Default {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
