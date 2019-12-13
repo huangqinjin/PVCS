@@ -1,6 +1,10 @@
 function global:pcli-run($cmd) {
     $global:PCLI.StandardInput.WriteLine($cmd)
 
+    $qs = @('Workfile "*" unchanged, check in anyway? (y/n) ', $null),
+          @('Workfile "*" is older than its parent, check in anyway? (y/n) ', $null),
+          @('A writable "*" exists, check out anyway? (y/n) ', $null)
+
     $buf = [Char[]]::new(4096)
     $output = ''
     while ($true) {
@@ -32,7 +36,26 @@ function global:pcli-run($cmd) {
             }
             
             2 {
-                $cmd = Read-Host -Prompt $output
+                $q = $null
+                foreach ($s in $qs) {
+                    if ($output -like $s[0]) {
+                        $q = $s
+                        break
+                    }
+                }
+                if ($q) {
+                    if ($q[1]) {
+                        $cmd = $q[1]
+                    } else {
+                        $cmd = Read-Host -Prompt "$output(Y/N) "
+                        if ($cmd -cin 'Y','N') {
+                            $q[1] = $cmd
+                        }
+                    }
+                } else {
+                    $cmd = Read-Host -Prompt $output
+                }
+
                 $global:PCLI.StandardInput.WriteLine($cmd)
                 $output = ''
             }
