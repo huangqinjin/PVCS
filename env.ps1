@@ -354,34 +354,19 @@ function global:pcli {
             pcli-git-ensure-work-tree-root
             pcli-git-ensure-master-branch-clean
 
-            $oldfiles = @()     # files changed in master since base
-            $newfiles = @()     # files changed in branch since base
+            $files = @()
             foreach ($f in $args) {
-                if ($files = git diff --name-only """$f""..." 2>$null) {
-                    $oldfiles += $files
-                }
-                if ($files = git diff --name-only "...""$f""" 2>$null) {
-                    $newfiles += $files
-                } elseif ($LastExitCode) {
+                $files += git diff --name-only "...""$f""" 2>$null
+                if ($LastExitCode) {
                     # if $f is not a valid ref, treat it as a normal file
-                    $newfiles += $f
+                    $files += $f
                 }
             }
-
-            $oldfiles = $oldfiles | Sort-Object -Unique
-            $newfiles = $newfiles | Sort-Object -Unique
-
-            # set difference, such that we do not check out same files again
-            $files = Compare-Object -ReferenceObject @($newfiles) -DifferenceObject @($oldfiles) |
-                     Where-Object -Property SideIndicator -EQ -Value '<=' |
-                     Select-Object -ExpandProperty InputObject
-
-            if ($files) {
+            if ($files = $files | Sort-Object -Unique) {
                 $time = Get-Date -Format "yyyy.MM.dd HH:mm:ss"
                 # -y: Yes to 'A writable "*" exists, check out anyway? (y/n)'
                 # -l: lock files for update. If one file has already checked out, the second checkout
                 # will fail so that it won't overwrite the file which may be already modified locally.
-                # Normally it won't happen, since we performed the set difference.
                 pcli get -y -l -nb -nm $files
                 git add $files
                 git commit -am"[partial] $time"
