@@ -373,6 +373,35 @@ function global:pcli {
             }
         }
 
+        "clone" {
+            pcli-git-ensure-master-branch-clean
+
+            if ($v = $args[0]) {
+                $v = "-v""$v"""
+            }
+
+            $count = pcli-run 'ListVersionedFiles -z .' | Measure-Object | Select-Object -ExpandProperty Count
+            $time = Get-Date
+
+            # -y: Yes to 'A writable "*" exists, check out anyway? (y/n)'
+            pcli get -y -nb -nm "$v" . | ForEach-Object -Begin {
+                $i = 0
+                Write-Host "$time -- Start Checking out $count files"
+            } -Process {
+                ++$i
+                Write-Progress -Activity "Checking out $count files" -Status "Progress: $i" -PercentComplete ($i/$count*100)
+            } -End {
+                Write-Host ("$(Get-Date) -- Finish Checked out $i files, spent {0:g}." -f (New-TimeSpan -Start $time))
+            }
+
+            $time = $time.ToString("yyyy.MM.dd HH:mm:ss")
+            if ($v) {
+                git commit -am"$($args[0]) ($time)"
+            } else {
+                git commit -am"$time"
+            }
+        }
+
         Default {
             if ($cmd[0] -eq '!') {
                 $cmd = $cmd.Substring(1)
