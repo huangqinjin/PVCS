@@ -357,6 +357,30 @@ function global:pcli {
             }
         }
 
+        "lock" {
+            $files = @()
+            foreach ($f in $args) {
+                $files += git diff --name-only """$f""...HEAD" 2>$null
+                if ($LastExitCode) {
+                    # if $f is not a valid ref, treat it as a normal file
+                    $files += $f
+                }
+            }
+            pcli-run ((,'Lock' + $files) -join ' ')
+        }
+
+        "unlock" {
+            $files = @()
+            foreach ($f in $args) {
+                $files += git diff --name-only """$f""...HEAD" 2>$null
+                if ($LastExitCode) {
+                    # if $f is not a valid ref, treat it as a normal file
+                    $files += $f
+                }
+            }
+            pcli-run ((,'Unlock' + $files) -join ' ')
+        }
+
         "push" {
             pcli-git-ensure-master-branch-clean
 
